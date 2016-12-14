@@ -108,7 +108,7 @@ def bash_progress(cmd, progress):
     p = subprocess.Popen('/bin/bash', stdout=fpwrite, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
     watch_thread = WatchThread(open(progress_report, 'r'), p, progress)
     watch_thread.start()
-    _, e = p.communicate(cmd)
+    o, e = p.communicate(cmd)
     r = p.returncode
     watch_thread.stop()
     fpwrite.close()
@@ -124,7 +124,7 @@ def bash_progress(cmd, progress):
 
     if r != 0:
         raise BashError('failed to execute bash[%s], return code: %s, stderr: %s' % (cmd, r, e))
-    return r, e
+    return r, o, e
 
 def in_bash(func):
     @functools.wraps(func)

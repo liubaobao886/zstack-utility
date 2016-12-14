@@ -214,21 +214,22 @@ class LocalStoragePlugin(kvmagent.KvmAgent):
         cmd = jsonobject.loads(req[http.REQUEST_BODY])
         chain = sum([linux.qcow2_get_file_chain(p) for p in cmd.paths], [])
         total = 0
+        progress = Progress()
+        progress.processType = "LocalStorageMigrateVolume"
+        progress.resourceUuid = cmd.uuid
+        progress.stages = {1: "0:10", 2: "10:90", 3: "90:100"}
+        progress.stage = 2
         for path in set(chain):
             total = total + os.path.getsize(path)
 
+        progress.total = total
         for path in set(chain):
             PATH = path
             PASSWORD = cmd.dstPassword
             USER = cmd.dstUsername
             IP = cmd.dstIp
             PORT = (cmd.dstPort and cmd.dstPort or "22")
-            progress = Progress()
-            progress.processType = "LocalStorageMigrateVolume"
-            progress.resourceUuid = cmd.uuid
-            progress.total = total
-            progress.stages = {1: "0:10", 2: "10:90", 3: "90:100"}
-            progress.stage = 2
+
             bash_progress('rsync -avz --progress --relative {{PATH}} --rsh="/usr/bin/sshpass -p {{PASSWORD}} ssh -o StrictHostKeyChecking=no -p {{PORT}} -l {{USER}}" {{IP}}:/', progress)
             bash_errorout('/usr/bin/sshpass -p {{PASSWORD}} ssh -p {{PORT}} {{USER}}@{{IP}} "/bin/sync {{PATH}}"')
 

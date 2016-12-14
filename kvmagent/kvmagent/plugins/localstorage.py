@@ -208,6 +208,7 @@ class LocalStoragePlugin(kvmagent.KvmAgent):
             progress.stages = {1: "0:10", 2: "10:90", 3: "90:100"}
             progress.stage = 3
             progress.total = os.path.getsize(to.path)
+            progress.flag = "end"
             dst_md5, _ = bash_progress("md5sum %s | cut -d ' ' -f 1" % to.path, progress)
             if dst_md5 != to.md5:
                 raise Exception("MD5 unmatch. The file[uuid:%s, path:%s]'s md5 (src host:%s, dst host:%s)" %

@@ -10,6 +10,7 @@ from zstacklib.utils import http
 from zstacklib.utils import jsonobject
 from zstacklib.utils import linux
 from zstacklib.utils import shell
+from zstacklib.utils.report import Progress
 from zstacklib.utils.bash import *
 
 logger = log.get_logger(__name__)
@@ -222,8 +223,13 @@ class LocalStoragePlugin(kvmagent.KvmAgent):
             USER = cmd.dstUsername
             IP = cmd.dstIp
             PORT = (cmd.dstPort and cmd.dstPort or "22")
-            bash_progress('rsync -avz --progress --relative {{PATH}} --rsh="/usr/bin/sshpass -p {{PASSWORD}} ssh -o StrictHostKeyChecking=no -p {{PORT}} -l {{USER}}" {{IP}}:/',
-                          total, "LocalStorageMigrateVolume", cmd.uuid)
+            progress = Progress()
+            progress.processType = "LocalStorageMigrateVolume"
+            progress.resourceUuid = cmd.uuid
+            progress.total = total
+            progress.stages = {1: "0:10", 2: "10:90", 3: "90:100"}
+            progress.stage = 2
+            bash_progress('rsync -avz --progress --relative {{PATH}} --rsh="/usr/bin/sshpass -p {{PASSWORD}} ssh -o StrictHostKeyChecking=no -p {{PORT}} -l {{USER}}" {{IP}}:/', progress)
             bash_errorout('/usr/bin/sshpass -p {{PASSWORD}} ssh -p {{PORT}} {{USER}}@{{IP}} "/bin/sync {{PATH}}"')
 
         rsp = AgentResponse()
